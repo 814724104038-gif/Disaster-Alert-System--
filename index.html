@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Disaster Alert System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #1a237e;
+            --secondary: #283593;
+            --accent: #3949ab;
+            --danger: #e53935;
+            --warning: #ff9800;
+            --safe: #43a047;
+            --light: #f5f5f5;
+            --dark: #121212;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f1b31, #1c2e4a);
+            color: var(--light);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo i {
+            font-size: 2.5rem;
+            color: var(--accent);
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .status-bar {
+            display: flex;
+            gap: 20px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .status-item i {
+            font-size: 1.2rem;
+        }
+
+        .safe i {
+            color: var(--safe);
+        }
+
+        .warning i {
+            color: var(--warning);
+        }
+
+        .danger i {
+            color: var(--danger);
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .alert-level {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .alert-low {
+            background: rgba(67, 160, 71, 0.2);
+            color: var(--safe);
+        }
+
+        .alert-medium {
+            background: rgba(255, 152, 0, 0.2);
+            color: var(--warning);
+        }
+
+        .alert-high {
+            background: rgba(229, 57, 53, 0.2);
+            color: var(--danger);
+        }
+
+        .map-container {
+            height: 300px;
+            background: linear-gradient(45deg, #2c387e, #3f51b5);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .map-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHBhdHRlcm5UcmFuc2Zvcm09InJvdGF0ZSg0NSkiPjxyZWN0IHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNwYXR0ZXJuKSIvPjwvc3ZnPg==');
+        }
+
+        .threat-marker {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: pulse 2s infinite;
+        }
+
+        .threat-1 {
+            background: var(--safe);
+            top: 30%;
+            left: 25%;
+        }
+
+        .threat-2 {
+            background: var(--warning);
+            top: 60%;
+            left: 70%;
+        }
+
+        .threat-3 {
+            background: var(--danger);
+            top: 45%;
+            left: 50%;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(67, 160, 71, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 15px rgba(67, 160, 71, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(67, 160, 71, 0);
+            }
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .data-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .data-label {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .data-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .chart-container {
+            height: 250px;
+            margin-top: 10px;
+        }
+
+        .alerts-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-height: 350px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .alert-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-left: 4px solid var(--safe);
+        }
+
+        .alert-item.warning {
+            border-left-color: var(--warning);
+        }
+
+        .alert-item.danger {
+            border-left-color: var(--danger);
+        }
+
+        .alert-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .alert-safe {
+            background: rgba(67, 160, 71, 0.2);
+            color: var(--safe);
+        }
+
+        .alert-warning {
+            background: rgba(255, 152, 0, 0.2);
+            color: var(--warning);
+        }
+
+        .alert-danger {
+            background: rgba(229, 57, 53, 0.2);
+            color: var(--danger);
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .alert-desc {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .alert-time {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .action-btn {
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+            border: none;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .action-btn i {
+            font-size: 1.8rem;
+        }
+
+        .action-btn span {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 1100px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .actions {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .data-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .actions {
+                grid-template-columns: 1fr;
+            }
+            
+            header {
+                flex-direction: column;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-shield-alt"></i>
+                <h1>Advanced Disaster Alert System</h1>
+            </div>
+            <div class="status-bar">
+                <div class="status-item safe">
+                    <i class="fas fa-check-circle"></i>
+                    <span>System: Operational</span>
+                </div>
+                <div class="status-item warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Alerts: 3 Active</span>
+                </div>
+                <div class="status-item">
+                    <i class="fas fa-satellite-dish"></i>
+                    <span>Connected to 12 Sensors</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="dashboard">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Threat Map</div>
+                    <div class="alert-level alert-medium">MEDIUM RISK</div>
+                </div>
+                <div class="map-container">
+                    <div class="map-overlay"></div>
+                    <div class="threat-marker threat-1"></div>
+                    <div class="threat-marker threat-2"></div>
+                    <div class="threat-marker threat-3"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Environmental Data</div>
+                    <div class="alert-level alert-low">STABLE</div>
+                </div>
+                <div class="data-grid">
+                    <div class="data-item">
+                        <div class="data-label">Seismic Activity</div>
+                        <div class="data-value">2.3 Richter</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-label">Wind Speed</div>
+                        <div class="data-value">18 km/h</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-label">Rainfall</div>
+                        <div class="data-value">12 mm</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-label">Temperature</div>
+                        <div class="data-value">26°C</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="dataChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Active Alerts</div>
+                    <div class="alert-level alert-high">3 ALERTS</div>
+                </div>
+                <div class="alerts-container">
+                    <div class="alert-item warning">
+                        <div class="alert-icon alert-warning">
+                            <i class="fas fa-water"></i>
+                        </div>
+                        <div class="alert-content">
+                            <div class="alert-title">Flood Warning</div>
+                            <div class="alert-desc">River levels rising in northern region</div>
+                        </div>
+                        <div class="alert-time">12:45 PM</div>
+                    </div>
+                    <div class="alert-item danger">
+                        <div class="alert-icon alert-danger">
+                            <i class="fas fa-wind"></i>
+                        </div>
+                        <div class="alert-content">
+                            <div class="alert-title">Cyclone Alert</div>
+                            <div class="alert-desc">Tropical storm approaching coastal areas</div>
+                        </div>
+                        <div class="alert-time">11:20 AM</div>
+                    </div>
+                    <div class="alert-item warning">
+                        <div class="alert-icon alert-warning">
+                            <i class="fas fa-mountain"></i>
+                        </div>
+                        <div class="alert-content">
+                            <div class="alert-title">Landslide Risk</div>
+                            <div class="alert-desc">Heavy rainfall increasing landslide risk in hilly areas</div>
+                        </div>
+                        <div class="alert-time">09:15 AM</div>
+                    </div>
+                    <div class="alert-item">
+                        <div class="alert-icon alert-safe">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div class="alert-content">
+                            <div class="alert-title">All Clear</div>
+                            <div class="alert-desc">Earthquake aftershocks have subsided</div>
+                        </div>
+                        <div class="alert-time">Yesterday</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Emergency Protocols</div>
+                    <div class="alert-level alert-low">READY</div>
+                </div>
+                <div class="alerts-container">
+                    <div class="alert-item">
+                        <div class="alert-icon alert-safe">
+                            <i class="fas fa-house-user"></i>
+                        </div>
+                        <div class="alert-content">
+                            <div class="alert-title">Evacuation Routes</div>
+                            <div class="alert-desc">Primary and secondary routes mapped for all zones</div>
+                        </div>
+                    </div>
+                    <div class="alert-item">
+                        <div class="alert-icon alert-safe">
+                            <i class="fas fa-broadcast-tower"></i>
+                        </div>
+                        <div class="alert-content">
+                            <div class="alert-title">Communication Channels</div>
+                            <div class="alert-desc">Emergency broadcast system operational</div>
+                        </div>
+                    </div>
+                    <div class="alert-item">
+                        <div class="alert-icon alert-safe">
+                            <i class="fas fa-first-aid"></i>
+                        </div>
+                        <div class="alert-content">
+                            <div class="alert-title">Medical Facilities</div>
+                            <div class="alert-desc">All hospitals on standby with emergency supplies</div>
+                        </div>
+                    </div>
+                    <div class="alert-item">
+                        <div class="alert-icon alert-safe">
+                            <i class="fas fa-utensils"></i>
+                        </div>
+                        <div class="alert-content">
+                            <div class="alert-title">Relief Supplies</div>
+                            <div class="alert-desc">Adequate food and water stocked at shelters</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="action-btn">
+                <i class="fas fa-bullhorn"></i>
+                <span>Issue Alert</span>
+            </button>
+            <button class="action-btn">
+                <i class="fas fa-map-marked-alt"></i>
+                <span>View Evacuation</span>
+            </button>
+            <button class="action-btn">
+                <i class="fas fa-users"></i>
+                <span>Contact Teams</span>
+            </button>
+            <button class="action-btn">
+                <i class="fas fa-chart-bar"></i>
+                <span>Generate Report</span>
+            </button>
+        </div>
+
+        <footer>
+            <p>Advanced Disaster Alert System &copy; 2023 | Real-time Monitoring & Early Warning Platform</p>
+        </footer>
+    </div>
+
+    <script>
+        // Initialize data chart
+        const ctx = document.getElementById('dataChart').getContext('2d');
+        const dataChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'],
+                datasets: [
+                    {
+                        label: 'Seismic Activity',
+                        data: [1.2, 1.5, 1.8, 2.1, 2.3, 2.0, 1.7, 1.4],
+                        borderColor: '#43a047',
+                        backgroundColor: 'rgba(67, 160, 71, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'Wind Speed (km/h)',
+                        data: [12, 15, 18, 22, 18, 16, 14, 12],
+                        borderColor: '#3949ab',
+                        backgroundColor: 'rgba(57, 73, 171, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: 'rgba(255, 255, 255, 0.7)'
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.7)'
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.7)'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Simulate real-time updates
+        setInterval(() => {
+            // Update random data values
+            document.querySelectorAll('.data-value').forEach(item => {
+                const currentValue = parseFloat(item.textContent);
+                const change = (Math.random() - 0.5) * 2;
+                const newValue = Math.max(0, currentValue + change);
+                
+                if (item.textContent.includes('°C') || item.textContent.includes('Richter')) {
+                    item.textContent = newValue.toFixed(1) + (item.textContent.includes('°C') ? '°C' : ' Richter');
+                } else {
+                    item.textContent = Math.round(newValue) + (item.textContent.includes('km/h') ? ' km/h' : ' mm');
+                }
+            });
+            
+            // Randomly change alert levels occasionally
+            if (Math.random() < 0.1) {
+                const alertLevels = document.querySelectorAll('.alert-level');
+                const levels = ['alert-low', 'alert-medium', 'alert-high'];
+                const texts = ['LOW RISK', 'MEDIUM RISK', 'HIGH RISK'];
+                const randomIndex = Math.floor(Math.random() * 3);
+                
+                alertLevels.forEach(alert => {
+                    alert.className = 'alert-level ' + levels[randomIndex];
+                    alert.textContent = texts[randomIndex];
+                });
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
